@@ -1,0 +1,28 @@
+name: ZNM2-NOWIFI-NOUSB-AUTOFIX
+
+on:
+  workflow_dispatch:
+    inputs:
+      WHAT_MY_SAY:
+        description: '编译说明'
+        required: false
+        type: string
+        default: 'ZN-M2 / no-wifi / no-usb / zn,m2 autofix / passwall+mosdns+lucky+gecoosac'
+
+permissions: write-all
+
+jobs:
+  znm2_nowifi_nousb_fw3:
+    name: lean-IPQ60XX-NOWIFI-fw3-znm2-nousb-autofix
+    uses: ./.github/workflows/DEFAULT.yml
+    with:
+      WRT_DEVICE: IPQ60XX-NOWIFI
+      WRT_FIREWALL: fw3
+      WRT_OVERLAYS: m2nousb
+      WRT_DIY_SETTING: diy_config.sh
+      WRT_DIYPackages: Packages-M2-Autofix.sh
+      WRT_DEFAULT_LANIP: 192.168.10.1
+      WRT_RELEASE_FIRMWARE: true
+      WHAT_MY_SAY: ${{ inputs.WHAT_MY_SAY }}
+      WRT_SOURCE_FLAVOR: lean
+    secrets: inherit
