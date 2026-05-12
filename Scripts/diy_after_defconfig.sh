@@ -1,193 +1,200 @@
-#!/bin/bash
-#=================================================
-# Description: DIY script
-# Lisence: MIT
-# Author: Linjw
-# 通用的diy配置脚本
-# 该脚本在config确认后于openwrt目录下执行
-# 主要职责：根据最终 .config 补充架构相关资源，例如 OpenClash Meta 内核、HomeProxy 规则集。
-#=================================================
+#!/usr/bin/env bash
+set -e
 
-# 运行在openwrt目录下
-current_script_dir=$(cd $(dirname $0) && pwd)
-echo "【Lin】脚本目录：${current_script_dir}"
-current_dir=$(pwd)
-openwrt_workdir="${current_dir}"
+echo "==== ZN-M2 final slim config after defconfig ===="
 
-# 获取CPU架构
-cputype=$(grep -m 1 "^CONFIG_TARGET_ARCH_PACKAGES=" ./.config | awk -F'=' '{print $2}' | tr -d '"')
-cputype_simple=''
-# 定义支持的 ARM64 架构处理器型号
-arm64_processors=("cortex-a53" "cortex-a57" "cortex-a73" "cortex-a77")
-# 判断是否包含这些处理器型号
-for processor in "${arm64_processors[@]}"; do
-    [[ "$cputype" == *"$processor"* ]] && cputype_simple='arm64' && break
-done
+cd "${OPENWRT_PATH:-./openwrt}" 2>/dev/null || cd openwrt
 
-if [ -z "${cputype_simple}" ]; then
-    # 定义 x86 架构相关的关键词
-    x86_keywords=("x86" "amd64")
-    # 判断是否包含 x86 架构关键词
-    for keyword in "${x86_keywords[@]}"; do
-        [[ "$cputype" == *"$keyword"* ]] && cputype_simple='amd64' && break
-    done   
+# ============================================================
+# 强制关闭不需要的插件
+# ============================================================
+
+./scripts/config --disable PACKAGE_luci-app-vlmcsd
+./scripts/config --disable PACKAGE_luci-i18n-vlmcsd-zh-cn
+./scripts/config --disable PACKAGE_vlmcsd
+
+./scripts/config --disable PACKAGE_luci-app-rclone
+./scripts/config --disable PACKAGE_luci-i18n-rclone-zh-cn
+./scripts/config --disable PACKAGE_rclone
+./scripts/config --disable PACKAGE_rclone-ng
+./scripts/config --disable PACKAGE_rclone-webui
+
+./scripts/config --disable PACKAGE_luci-app-ssr-plus
+./scripts/config --disable PACKAGE_luci-i18n-ssr-plus-zh-cn
+./scripts/config --disable PACKAGE_luci-app-openclash
+./scripts/config --disable PACKAGE_luci-app-homeproxy
+./scripts/config --disable PACKAGE_luci-app-nikki
+./scripts/config --disable PACKAGE_luci-app-momo
+./scripts/config --disable PACKAGE_luci-app-daed
+
+./scripts/config --disable PACKAGE_luci-app-autoreboot
+./scripts/config --disable PACKAGE_luci-i18n-autoreboot-zh-cn
+./scripts/config --disable PACKAGE_luci-app-ramfree
+./scripts/config --disable PACKAGE_luci-i18n-ramfree-zh-cn
+./scripts/config --disable PACKAGE_luci-app-watchcat
+./scripts/config --disable PACKAGE_luci-i18n-watchcat-zh-cn
+./scripts/config --disable PACKAGE_watchcat
+
+./scripts/config --disable PACKAGE_luci-app-samba
+./scripts/config --disable PACKAGE_luci-app-samba4
+./scripts/config --disable PACKAGE_luci-i18n-samba4-zh-cn
+./scripts/config --disable PACKAGE_luci-app-openlist
+./scripts/config --disable PACKAGE_luci-i18n-openlist-zh-cn
+./scripts/config --disable PACKAGE_luci-app-diskman
+./scripts/config --disable PACKAGE_luci-app-hd-idle
+./scripts/config --disable PACKAGE_luci-i18n-hd-idle-zh-cn
+
+./scripts/config --disable PACKAGE_luci-app-ddns
+./scripts/config --disable PACKAGE_luci-i18n-ddns-zh-cn
+./scripts/config --disable PACKAGE_luci-app-ddns-go
+./scripts/config --disable PACKAGE_luci-i18n-ddns-go-zh-cn
+./scripts/config --disable PACKAGE_luci-app-frpc
+./scripts/config --disable PACKAGE_luci-app-frps
+./scripts/config --disable PACKAGE_luci-app-zerotier
+./scripts/config --disable PACKAGE_luci-app-openvpn
+./scripts/config --disable PACKAGE_luci-app-openvpn-server
+./scripts/config --disable PACKAGE_luci-proto-wireguard
+./scripts/config --disable PACKAGE_wireguard-tools
+
+./scripts/config --disable PACKAGE_luci-app-turboacc
+./scripts/config --disable PACKAGE_luci-i18n-turboacc-zh-cn
+./scripts/config --disable PACKAGE_luci-app-sqm
+./scripts/config --disable PACKAGE_sqm-scripts
+./scripts/config --disable PACKAGE_sqm-scripts-nss
+
+./scripts/config --disable PACKAGE_luci-app-netspeedtest
+./scripts/config --disable PACKAGE_luci-app-netdata
+./scripts/config --disable PACKAGE_luci-app-nlbwmon
+./scripts/config --disable PACKAGE_luci-app-wrtbwmon
+./scripts/config --disable PACKAGE_wrtbwmon
+./scripts/config --disable PACKAGE_luci-app-ttyd
+./scripts/config --disable PACKAGE_luci-app-filetransfer
+./scripts/config --disable PACKAGE_luci-app-wol
+./scripts/config --disable PACKAGE_luci-app-wolplus
+./scripts/config --disable PACKAGE_luci-app-timewol
+./scripts/config --disable PACKAGE_luci-app-onliner
+./scripts/config --disable PACKAGE_luci-app-vsftpd
+./scripts/config --disable PACKAGE_luci-app-verysync
+
+# ============================================================
+# 强制关闭 WiFi
+# ============================================================
+
+./scripts/config --disable PACKAGE_ipq-wifi-zn_m2
+./scripts/config --disable PACKAGE_kmod-ath
+./scripts/config --disable PACKAGE_kmod-ath11k
+./scripts/config --disable PACKAGE_kmod-ath11k-ahb
+./scripts/config --disable PACKAGE_kmod-ath11k-pci
+./scripts/config --disable PACKAGE_ath11k-firmware-ipq6018
+./scripts/config --disable PACKAGE_ath11k-firmware-qcn9074
+./scripts/config --disable PACKAGE_kmod-cfg80211
+./scripts/config --disable PACKAGE_kmod-mac80211
+./scripts/config --disable PACKAGE_mac80211
+./scripts/config --disable PACKAGE_wifi-scripts
+./scripts/config --disable PACKAGE_wireless-regdb
+./scripts/config --disable PACKAGE_iw
+./scripts/config --disable PACKAGE_iwinfo
+./scripts/config --disable PACKAGE_wpad
+./scripts/config --disable PACKAGE_wpad-basic
+./scripts/config --disable PACKAGE_wpad-basic-mbedtls
+./scripts/config --disable PACKAGE_wpad-basic-openssl
+./scripts/config --disable PACKAGE_wpad-openssl
+./scripts/config --disable PACKAGE_wpad-mbedtls
+./scripts/config --disable PACKAGE_wpad-wolfssl
+./scripts/config --disable PACKAGE_wpad-full
+./scripts/config --disable PACKAGE_wpad-full-openssl
+./scripts/config --disable PACKAGE_hostapd
+./scripts/config --disable PACKAGE_hostapd-common
+./scripts/config --disable PACKAGE_hostapd-utils
+
+# ============================================================
+# 强制关闭 USB / 存储
+# ============================================================
+
+./scripts/config --disable PACKAGE_kmod-usb-core
+./scripts/config --disable PACKAGE_kmod-usb2
+./scripts/config --disable PACKAGE_kmod-usb3
+./scripts/config --disable PACKAGE_kmod-usb-ehci
+./scripts/config --disable PACKAGE_kmod-usb-ohci
+./scripts/config --disable PACKAGE_kmod-usb-xhci-hcd
+./scripts/config --disable PACKAGE_kmod-usb-xhci-pci
+./scripts/config --disable PACKAGE_kmod-usb-storage
+./scripts/config --disable PACKAGE_kmod-usb-storage-uas
+./scripts/config --disable PACKAGE_kmod-usb-net
+./scripts/config --disable PACKAGE_kmod-usb-net-cdc-ether
+./scripts/config --disable PACKAGE_kmod-usb-net-rndis
+./scripts/config --disable PACKAGE_kmod-usb-net-cdc-mbim
+./scripts/config --disable PACKAGE_kmod-usb-net-qmi-wwan
+./scripts/config --disable PACKAGE_kmod-usb-serial
+./scripts/config --disable PACKAGE_kmod-usb-serial-option
+./scripts/config --disable PACKAGE_kmod-usb-serial-wwan
+./scripts/config --disable PACKAGE_usb-modeswitch
+./scripts/config --disable PACKAGE_usbutils
+./scripts/config --disable PACKAGE_usbmuxd
+
+./scripts/config --disable PACKAGE_block-mount
+./scripts/config --disable PACKAGE_automount
+./scripts/config --disable PACKAGE_autosamba
+./scripts/config --disable PACKAGE_fdisk
+./scripts/config --disable PACKAGE_lsblk
+./scripts/config --disable PACKAGE_blkid
+./scripts/config --disable PACKAGE_e2fsprogs
+./scripts/config --disable PACKAGE_f2fs-tools
+./scripts/config --disable PACKAGE_kmod-fs-ext4
+./scripts/config --disable PACKAGE_kmod-fs-f2fs
+./scripts/config --disable PACKAGE_kmod-fs-vfat
+./scripts/config --disable PACKAGE_kmod-fs-ntfs3
+
+# ============================================================
+# 只保留目标插件
+# ============================================================
+
+./scripts/config --enable PACKAGE_luci
+./scripts/config --enable LUCI_LANG_zh_Hans
+./scripts/config --enable PACKAGE_luci-i18n-base-zh-cn
+./scripts/config --enable PACKAGE_luci-i18n-firewall-zh-cn
+./scripts/config --enable PACKAGE_luci-i18n-opkg-zh-cn
+
+./scripts/config --enable PACKAGE_luci-theme-aurora
+./scripts/config --disable PACKAGE_luci-theme-argon
+./scripts/config --disable PACKAGE_luci-theme-bootstrap
+
+./scripts/config --enable PACKAGE_luci-app-passwall
+./scripts/config --enable PACKAGE_luci-i18n-passwall-zh-cn
+./scripts/config --enable PACKAGE_xray-core
+./scripts/config --enable PACKAGE_sing-box
+./scripts/config --enable PACKAGE_v2ray-geodata
+./scripts/config --enable PACKAGE_geoview
+./scripts/config --enable PACKAGE_chinadns-ng
+./scripts/config --enable PACKAGE_dns2socks
+./scripts/config --enable PACKAGE_ipt2socks
+
+./scripts/config --enable PACKAGE_luci-app-mosdns
+./scripts/config --enable PACKAGE_luci-i18n-mosdns-zh-cn
+./scripts/config --enable PACKAGE_mosdns
+
+./scripts/config --enable PACKAGE_luci-app-lucky
+./scripts/config --enable PACKAGE_luci-i18n-lucky-zh-cn
+./scripts/config --enable PACKAGE_lucky
+
+./scripts/config --enable PACKAGE_luci-app-gecoosac
+./scripts/config --enable PACKAGE_gecoosac
+
+./scripts/config --enable PACKAGE_microsocks
+
+# ============================================================
+# 重新生成最终配置
+# ============================================================
+
+make defconfig
+
+echo "==== Final enabled target packages ===="
+grep -E '^CONFIG_PACKAGE_(luci-app-|luci-theme-|vlmcsd|rclone|wpad|wifi-scripts|kmod-ath11k|kmod-mac80211|kmod-usb|block-mount|microsocks|mosdns|lucky|gecoosac|xray-core|sing-box)=' .config || true
+
+echo "==== Check unwanted packages ===="
+if grep -E '^CONFIG_PACKAGE_(luci-app-vlmcsd|vlmcsd|luci-app-rclone|luci-app-ssr-plus|luci-app-openclash|wifi-scripts|kmod-mac80211|kmod-ath11k|wpad|kmod-usb-core|block-mount)=' .config; then
+  echo "ERROR: unwanted package still enabled"
+  exit 1
 fi
 
-echo "【Lin】设备架构：${cputype_simple:-'未知架构'} ${cputype}"
-
-get_config_value() {
-    local key="$1"
-    grep -m 1 "^${key}=" ./.config | awk -F'=' '{print $2}' | tr -d '"'
-}
-
-trim_passwall_variants_after_defconfig() {
-    local choose_type_passwall
-    local passwall_makefile
-
-    choose_type_passwall=$(get_config_value "CONFIG_PACKAGE_luci-app-passwall")
-    if [ -n "${choose_type_passwall}" ] && [ "${choose_type_passwall}" != "n" ]; then
-        echo "【Lin】已启用 luci-app-passwall，跳过默认变体裁剪"
-        return 0
-    fi
-
-    passwall_makefile=$(find ./package ./feeds/luci ./feeds/packages -maxdepth 3 -type f -wholename "*/luci-app-passwall/Makefile" -print -quit 2>/dev/null)
-    if [ -z "${passwall_makefile}" ] || [ ! -f "${passwall_makefile}" ]; then
-        echo "【Lin】未找到 luci-app-passwall/Makefile，跳过默认变体裁剪"
-        return 0
-    fi
-
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR/,/default n/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Haproxy/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server/,/default n/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs/,/default y/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_SingBox/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Geo/,/default [ny]/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_Xray/,/x86_64/d' "${passwall_makefile}"
-    sed -i '/INCLUDE_Haproxy/d; /INCLUDE_Shadowsocks_Rust_Client/d; /INCLUDE_Shadowsocks_Rust_Server/d; /INCLUDE_Simple_Obfs/d; /INCLUDE_SingBox/d; /INCLUDE_V2ray_Geo/d; /INCLUDE_V2ray_Plugin/d; /INCLUDE_Xray/d' "${passwall_makefile}"
-    sed -i '/Shadowsocks_NONE/d; /Shadowsocks_Libev/d; /ShadowsocksR/d' "${passwall_makefile}"
-
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Haproxy=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Client=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Server=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Simple_Obfs=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_SingBox=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Geo/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_V2ray_Plugin=/d' ./.config
-    sed -i '/^CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Xray=/d' ./.config
-
-    make defconfig >/dev/null 2>&1
-    echo "【Lin】passwall 默认变体已在 defconfig 后裁剪"
-    return 0
-}
-
-prepare_openclash_meta_core() {
-    # 仅在启用了 luci-app-openclash 且架构受支持时，预置 clash_meta 二进制到插件目录。
-    local choose_type_openclash openclash_dir openclash_core_arch openclash_core_url
-    local openclash_root_dir openclash_core_dir temp_dir temp_tar
-
-    choose_type_openclash=$(get_config_value "CONFIG_PACKAGE_luci-app-openclash")
-    if [ -z "${choose_type_openclash}" ] || [ "${choose_type_openclash}" = "n" ]; then
-        echo "【Lin】未启用 luci-app-openclash，跳过 Meta 内核预置"
-        return 0
-    fi
-
-    openclash_dir=$(find ./package ./feeds/luci ./feeds/packages -maxdepth 3 -type d -iname "luci-app-openclash" -print -quit)
-    if [ -z "${openclash_dir}" ] || [ ! -d "${openclash_dir}" ]; then
-        echo "【Lin】警告：已启用 luci-app-openclash，但未找到插件目录，跳过 Meta 内核预置"
-        return 0
-    fi
-
-    case "${cputype_simple}" in
-        amd64|arm64)
-            openclash_core_arch="${cputype_simple}"
-            ;;
-        *)
-            echo "【Lin】警告：OpenClash Meta 内核暂不支持当前架构 ${cputype:-unknown}，跳过预置"
-            return 0
-            ;;
-    esac
-
-    openclash_root_dir="$(readlink -f "${openclash_dir}")/root/etc/openclash"
-    openclash_core_dir="${openclash_root_dir}/core"
-    openclash_core_url="https://raw.githubusercontent.com/vernesong/OpenClash/core/master/meta/clash-linux-${openclash_core_arch}.tar.gz"
-
-    mkdir -p "${openclash_core_dir}"
-    temp_dir=$(mktemp -d "${openwrt_workdir}/tmp/openclash-meta.XXXXXX") || {
-        echo "【Lin】警告：无法创建 OpenClash 临时目录，跳过 Meta 内核预置"
-        return 0
-    }
-    temp_tar="${temp_dir}/clash-meta.tar.gz"
-
-    echo "【Lin】开始预置 OpenClash Meta 内核：${openclash_core_arch}"
-    if ! curl -fL --connect-timeout 30 --retry 3 --retry-delay 2 -o "${temp_tar}" "${openclash_core_url}"; then
-        echo "【Lin】警告：下载 OpenClash Meta 内核失败：${openclash_core_url}"
-        rm -rf "${temp_dir}"
-        return 0
-    fi
-
-    if ! tar -xzf "${temp_tar}" -C "${temp_dir}"; then
-        echo "【Lin】警告：解压 OpenClash Meta 内核失败"
-        rm -rf "${temp_dir}"
-        return 0
-    fi
-
-    if [ ! -f "${temp_dir}/clash" ]; then
-        echo "【Lin】警告：OpenClash Meta 内核压缩包内未找到 clash 主程序"
-        rm -rf "${temp_dir}"
-        return 0
-    fi
-
-    mv -f "${temp_dir}/clash" "${openclash_core_dir}/clash_meta"
-    chmod 0755 "${openclash_core_dir}/clash_meta"
-    rm -rf "${temp_dir}"
-
-    echo "【Lin】OpenClash Meta 内核预置完成：${openclash_core_dir}/clash_meta"
-    return 0
-}
-
-trim_passwall_variants_after_defconfig
-prepare_openclash_meta_core
-
-cd "${openwrt_workdir}"
-# HomeProxy 规则依赖外部 surge-rules 仓库，这里在编译前直接预置到插件资源目录。
-choose_type_homeproxy=$(grep -m 1 "^CONFIG_PACKAGE_luci-app-homeproxy=" ./.config | awk -F'=' '{print $2}' | tr -d '"')
-# homeproxy_DIR=$(find ./package ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "luci-app-homeproxy" -prune)
-app_homeproxy_dir=$(find ./package ./feeds/luci ./feeds/packages -maxdepth 3 -type d -iname "luci-app-homeproxy" -print -quit 2>/dev/null)
-if [ -n "${choose_type_homeproxy}" ] && [ "${choose_type_homeproxy}" != "n" ] && [ -d "${app_homeproxy_dir}" ]; then
-
-    homeproxy_DIR=$(readlink -f "${app_homeproxy_dir}")
-
-    # 预置HomeProxy数据
-    if [ -d "${homeproxy_DIR}" ]; then
-        HP_RULES="${homeproxy_DIR}/root/etc/homeproxy/my_surge"
-        HP_PATCH="${homeproxy_DIR}/root/etc/homeproxy"
-
-        chmod +x $HP_PATCH/scripts/*
-        rm -rf $HP_PATCH/resources/*
-        [ -d "${HP_RULES}" ] && rm -fr "${HP_RULES}"
-        mkdir -p "${HP_RULES}"
-
-        git clone -q --depth=1 --single-branch --branch "release" "https://github.com/Loyalsoldier/surge-rules.git" "${HP_RULES}"
-        cd "${HP_RULES}" && RES_VER=$(git log -1 --pretty=format:'%s' | grep -o "[0-9]*")
-        
-        echo $RES_VER | tee china_ip4.ver china_ip6.ver china_list.ver gfw_list.ver
-        awk -F, '/^IP-CIDR,/{print $2 > "china_ip4.txt"} /^IP-CIDR6,/{print $2 > "china_ip6.txt"}' cncidr.txt
-        sed 's/^\.//g' direct.txt > china_list.txt ; sed 's/^\.//g' gfw.txt > gfw_list.txt
-
-        mv -f ${HP_RULES}/{china_*,gfw_list}.{ver,txt} ${HP_PATCH}/resources/
-
-        cd .. && rm -rf "${HP_RULES}"
-
-        echo "【Lin】homeproxy date has been updated!"
-    fi 
-fi
-
-
-
-
-
-
-
+echo "==== ZN-M2 final slim config OK ===="
